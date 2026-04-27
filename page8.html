@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Surprise — Akshu</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;min-height:100vh;overflow:hidden;font-family:"Cormorant Garamond",serif}
+#app{width:100vw;height:100vh;position:relative;overflow:hidden}
+
+/* ── INTRO SCREEN ── */
+#intro{
+  position:absolute;inset:0;z-index:50;
+  background:radial-gradient(ellipse at 50% 40%,#140828,#04040e);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:2.5rem;
+  opacity:0;transition:opacity 1s ease;
+}
+#intro.on{opacity:1}
+#intro-icon{font-size:72px;margin-bottom:1.6rem;
+  animation:iconpulse 2.2s ease-in-out infinite;
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",serif;
+  filter:drop-shadow(0 0 20px rgba(200,168,232,0.6))}
+@keyframes iconpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+#intro-title{font-size:34px;color:#e8d8ff;letter-spacing:3px;font-weight:300;margin-bottom:12px}
+#intro-sub{font-size:15px;color:#9878c8;letter-spacing:1.5px;font-style:italic;
+  line-height:2;max-width:440px;margin-bottom:2.8rem}
+#start-btn{
+  background:linear-gradient(135deg,#9878c8,#6848a8);color:#fff;border:none;
+  font-family:"Cormorant Garamond",serif;font-size:17px;padding:15px 52px;
+  border-radius:40px;cursor:pointer;letter-spacing:3px;font-style:italic;
+  box-shadow:0 0 30px rgba(152,120,200,0.55);
+  transition:transform 0.2s,box-shadow 0.2s}
+#start-btn:hover{transform:scale(1.04);box-shadow:0 0 44px rgba(152,120,200,0.75)}
+
+/* ── CAMERA ── */
+#cam-view{position:absolute;inset:0;z-index:5;display:none}
+#cam-view.show{display:block}
+#cam-feed{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+
+/* ── OVERLAY UI ── */
+#ui{position:absolute;inset:0;z-index:10;pointer-events:none}
+
+/* REC badge */
+#rec{position:absolute;top:22px;left:22px;display:flex;align-items:center;
+  gap:8px;background:rgba(0,0,0,0.55);border-radius:20px;padding:7px 16px;
+  opacity:0;transition:opacity 0.6s ease}
+#rec.on{opacity:1}
+#rec-dot{width:11px;height:11px;border-radius:50%;background:#ff3333;
+  animation:recdot 1s ease-in-out infinite}
+@keyframes recdot{0%,100%{opacity:1}50%{opacity:0.15}}
+#rec-text{font-size:14px;color:#fff;letter-spacing:3px;font-weight:600}
+#rec-timer{position:absolute;top:22px;right:22px;font-size:20px;color:#fff;
+  letter-spacing:2px;background:rgba(0,0,0,0.55);padding:7px 18px;
+  border-radius:20px;opacity:0;transition:opacity 0.6s ease}
+#rec-timer.on{opacity:1}
+
+/* Corner frame */
+.corner{position:absolute;width:60px;height:60px;border:2px solid rgba(200,168,232,0.45);pointer-events:none}
+.corner.tl{top:0;left:0;border-right:none;border-bottom:none}
+.corner.tr{top:0;right:0;border-left:none;border-bottom:none}
+.corner.bl{bottom:0;left:0;border-right:none;border-top:none}
+.corner.br{bottom:0;right:0;border-left:none;border-top:none}
+
+/* ── COUNTDOWN ── */
+#countdown{position:absolute;inset:0;z-index:20;
+  display:flex;align-items:center;justify-content:center;pointer-events:none}
+#count-num{
+  font-size:160px;color:#fff;font-weight:300;
+  opacity:0;transform:scale(1.6);
+  transition:opacity 0.25s ease,transform 0.5s ease;
+  text-shadow:0 0 50px rgba(200,168,232,0.9)}
+#count-num.show{opacity:1;transform:scale(1)}
+#count-num.hide{opacity:0;transform:scale(0.5)}
+
+/* ── MESSAGE OVERLAY ── */
+#msg-overlay{position:absolute;inset:0;z-index:25;
+  display:flex;align-items:center;justify-content:center;pointer-events:none}
+#msg-box{
+  background:rgba(0,0,0,0.78);border:1px solid rgba(200,168,232,0.4);
+  border-radius:18px;padding:2.2rem 3.2rem;text-align:center;
+  opacity:0;transform:scale(0.92);
+  transition:opacity 0.6s ease,transform 0.6s ease;
+  backdrop-filter:blur(10px);max-width:480px}
+#msg-box.show{opacity:1;transform:scale(1)}
+#msg-main{font-size:clamp(20px,4vw,34px);color:#f0e8ff;letter-spacing:2px;
+  font-weight:300;line-height:1.5;margin-bottom:8px}
+#msg-sub{font-size:14px;color:#9878c8;letter-spacing:2px;font-style:italic;line-height:1.8}
+
+/* ── CLOSE EYES SCREEN ── */
+#close-eyes{
+  position:absolute;inset:0;z-index:30;
+  background:rgba(0,0,0,0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:2rem;pointer-events:none;
+  transition:background 3s ease}
+#close-eyes.dark{background:rgba(0,0,0,0.92)}
+#eyes-text{font-size:clamp(28px,5vw,52px);color:#f0e8ff;letter-spacing:3px;
+  font-weight:300;opacity:0;transition:opacity 1s ease;line-height:1.4;margin-bottom:10px}
+#eyes-text.on{opacity:1}
+#eyes-sub{font-size:15px;color:#c8a8e8;letter-spacing:2px;font-style:italic;
+  opacity:0;transition:opacity 1s ease 0.5s;line-height:1.9}
+#eyes-sub.on{opacity:1}
+#eyes-icon{font-size:56px;opacity:0;transition:opacity 1s ease 1s;
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",serif}
+#eyes-icon.on{opacity:1}
+
+/* ── FLOATING HEARTS during camera ── */
+.heart-float{
+  position:absolute;pointer-events:none;z-index:12;
+  animation:heartrise linear forwards;
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",serif}
+@keyframes heartrise{0%{transform:translateY(0) scale(1);opacity:0.9}
+  100%{transform:translateY(-100vh) scale(0.5);opacity:0}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- INTRO -->
+  <div id="intro">
+    <div id="intro-icon">&#127873;</div>
+    <div id="intro-title">your surprise is ready</div>
+    <div id="intro-sub">
+      This is the final page, Akshu.<br>
+      Something very special is about to happen.<br>
+      When you press the button, your front camera will turn on.<br>
+      Just stay still — and keep your eyes open.
+    </div>
+    <button id="start-btn" onclick="startSurprise()">
+      &#10024; &nbsp; open my surprise &nbsp; &#10024;
+    </button>
+  </div>
+
+  <!-- CAMERA -->
+  <div id="cam-view">
+    <video id="cam-feed" autoplay playsinline muted></video>
+  </div>
+
+  <!-- UI OVERLAY -->
+  <div id="ui">
+    <div id="rec">
+      <div id="rec-dot"></div>
+      <div id="rec-text">REC</div>
+    </div>
+    <div id="rec-timer">00:00</div>
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div id="countdown">
+    <div id="count-num"></div>
+  </div>
+
+  <!-- MESSAGE -->
+  <div id="msg-overlay">
+    <div id="msg-box">
+      <div id="msg-main"></div>
+      <div id="msg-sub"></div>
+    </div>
+  </div>
+
+  <!-- CLOSE EYES -->
+  <div id="close-eyes">
+    <div id="eyes-icon">&#128064;</div>
+    <div id="eyes-text">Close Your Eyes</div>
+    <div id="eyes-sub">
+      keep them closed<br>
+      something beautiful is coming
+    </div>
+  </div>
+
+</div>
+
+<script>
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+let recSeconds=0, recInterval=null, camStream=null;
+
+// Timer
+function startTimer(){
+  recInterval=setInterval(()=>{
+    recSeconds++;
+    const m=String(Math.floor(recSeconds/60)).padStart(2,'0');
+    const s=String(recSeconds%60).padStart(2,'0');
+    document.getElementById('rec-timer').textContent=`${m}:${s}`;
+  },1000);
+}
+
+// Show message
+async function showMsg(main,sub,duration){
+  const box=document.getElementById('msg-box');
+  document.getElementById('msg-main').textContent=main;
+  document.getElementById('msg-sub').textContent=sub||'';
+  box.classList.add('show');
+  await sleep(duration);
+  box.classList.remove('show');
+  await sleep(600);
+}
+
+// Count number animation
+async function showCount(num){
+  const el=document.getElementById('count-num');
+  el.textContent=num;
+  el.className='show';
+  await sleep(700);
+  el.className='hide';
+  await sleep(350);
+  el.className='';
+}
+
+// Floating hearts
+function spawnHearts(){
+  const app=document.getElementById('app');
+  const hearts=['\u2665','\u2661','\u2665','\u2661','\u2665'];
+  hearts.forEach((h,i)=>{
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='heart-float';
+      el.textContent=h;
+      el.style.left=(5+Math.random()*90)+'%';
+      el.style.bottom='0';
+      el.style.fontSize=(16+Math.random()*20)+'px';
+      el.style.color=['#f9a8d4','#fcd34d','#c4b5fd','#e8d8ff'][Math.floor(Math.random()*4)];
+      el.style.animationDuration=(3+Math.random()*3)+'s';
+      app.appendChild(el);
+      setTimeout(()=>el.remove(),6000);
+    },i*400);
+  });
+}
+
+async function startSurprise(){
+  // Hide intro
+  document.getElementById('intro').style.opacity='0';
+  await sleep(800);
+  document.getElementById('intro').style.display='none';
+
+  // Start camera
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},
+      audio:false
+    });
+    const feed=document.getElementById('cam-feed');
+    feed.srcObject=camStream;
+    document.getElementById('cam-view').classList.add('show');
+    await sleep(800);
+  }catch(e){
+    // Camera denied - show a message but continue
+    document.getElementById('cam-view').classList.add('show');
+    document.getElementById('cam-feed').style.background='#111';
+  }
+
+  // Show REC
+  document.getElementById('rec').classList.add('on');
+  document.getElementById('rec-timer').classList.add('on');
+  startTimer();
+  spawnHearts();
+  setInterval(spawnHearts,5000);
+
+  await sleep(500);
+
+  // Message 1
+  await showMsg(
+    'The camera is on, Akshu.',
+    'stay exactly where you are',
+    2800
+  );
+
+  // Countdown 5 to 1
+  await showMsg(
+    'Get ready...',
+    'something is about to happen',
+    1800
+  );
+
+  for(let i=5;i>=1;i--){
+    await showCount(i);
+    await sleep(150);
+  }
+
+  // Message 2
+  await showMsg(
+    'Now...',
+    'close your eyes',
+    1500
+  );
+
+  // CLOSE EYES sequence
+  const ce=document.getElementById('close-eyes');
+  ce.classList.add('dark');
+  await sleep(400);
+  document.getElementById('eyes-icon').classList.add('on');
+  await sleep(300);
+  document.getElementById('eyes-text').classList.add('on');
+  await sleep(500);
+  document.getElementById('eyes-sub').classList.add('on');
+
+  // Camera keeps recording — Kartik walks in
+  // The recording continues indefinitely
+  // Page stays alive, camera never stops
+}
+
+// Boot
+async function boot(){
+  await sleep(300);
+  document.getElementById('intro').classList.add('on');
+}
+boot();
+</script>
+</body>
+</html>
