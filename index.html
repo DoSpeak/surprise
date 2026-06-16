@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@200;300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #060010;
+      overflow: hidden;
+    }
+
+    canvas#space {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .glow {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      filter: blur(110px);
+    }
+    .glow-1 {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(120,40,255,0.2) 0%, transparent 70%);
+      bottom: -320px; left: -220px;
+      animation: pulse1 8s ease-in-out infinite;
+    }
+    .glow-2 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(220,50,180,0.17) 0%, transparent 70%);
+      top: -220px; right: -120px;
+      animation: pulse2 10s ease-in-out infinite;
+    }
+    @keyframes pulse1 {
+      0%,100% { transform: scale(1) translate(0,0); opacity:0.8; }
+      50%      { transform: scale(1.15) translate(24px,-12px); opacity:1; }
+    }
+    @keyframes pulse2 {
+      0%,100% { transform: scale(1) translate(0,0); opacity:0.7; }
+      50%      { transform: scale(1.1) translate(-18px,22px); opacity:1; }
+    }
+
+    /* ── Main stage ─────────────────────────── */
+    .stage {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      text-align: center;
+      padding: 0 28px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    /* ── Orb icon ─────────────────────────── */
+    .orb {
+      font-size: 68px;
+      display: block;
+      margin-bottom: 28px;
+      animation: orb-float 4.5s ease-in-out infinite;
+      filter: drop-shadow(0 0 22px rgba(180,100,255,0.55));
+    }
+    @keyframes orb-float {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      35%      { transform: translateY(-11px) rotate(3deg); }
+      70%      { transform: translateY(-5px) rotate(-2deg); }
+    }
+
+    /* ── Typography ─────────────────────────── */
+    .title {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(2rem, 5vw, 2.7rem);
+      color: #fff;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .sub {
+      font-family: 'Inter', sans-serif;
+      font-weight: 200;
+      font-size: 0.68rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.27);
+      margin-bottom: 52px;
+    }
+
+    /* ── Input ───────────────────────────────── */
+    .input-row {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .pw-input {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.14);
+      padding: 14px 44px 14px 2px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.93rem;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      outline: none;
+      caret-color: #c084fc;
+      transition: border-color 0.3s;
+    }
+    .pw-input::placeholder {
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.1em;
+    }
+    .pw-input:focus {
+      border-bottom-color: rgba(192,132,252,0.8);
+    }
+
+    .eye-btn {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: rgba(255,255,255,0.28);
+      font-size: 1rem;
+      padding: 6px;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+    .eye-btn:hover { color: rgba(255,255,255,0.6); }
+
+    /* ── Error ───────────────────────────────── */
+    .err {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.71rem;
+      color: #f472b6;
+      letter-spacing: 0.1em;
+      min-height: 20px;
+      opacity: 0;
+      transition: opacity 0.25s;
+      margin-bottom: 26px;
+      text-align: left;
+      padding-left: 2px;
+    }
+    .err.show { opacity: 1; }
+
+    /* ── Enter button ────────────────────────── */
+    .enter-btn {
+      width: 100%;
+      padding: 15px 24px;
+      background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .enter-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .enter-btn:hover::before { opacity: 1; }
+    .enter-btn:hover {
+      box-shadow: 0 6px 32px rgba(168,85,247,0.4);
+      transform: translateY(-1px);
+    }
+    .enter-btn:active { transform: translateY(0); }
+    .enter-btn span { position: relative; z-index: 1; }
+
+    /* ── Shake ───────────────────────────────── */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      15%      { transform: translateX(-9px); }
+      30%      { transform: translateX(9px); }
+      45%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+      75%      { transform: translateX(-3px); }
+      90%      { transform: translateX(3px); }
+    }
+    .shake { animation: shake 0.45s ease; }
+
+    /* ── Success bloom ───────────────────────── */
+    #burst {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+    }
+    #burst.bloom {
+      animation: bloom 1.1s ease forwards;
+    }
+    @keyframes bloom {
+      0%   { opacity: 0; background: transparent; }
+      25%  { opacity: 1; background: rgba(150, 60, 255, 0.15); }
+      100% { opacity: 1; background: #060010; }
+    }
+
+    .fade-away {
+      animation: fade-away 0.7s ease forwards;
+    }
+    @keyframes fade-away {
+      to { opacity: 0; transform: scale(0.97); }
+    }
+
+    /* ── Footer hint ─────────────────────────── */
+    .footer-hint {
+      position: fixed;
+      bottom: 26px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.1);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="space"></canvas>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <div class="stage">
+    <div class="card" id="card">
+
+      <span class="orb">🔮</span>
+
+      <h1 class="title">Private Universe</h1>
+      <p class="sub">Enter the secret passphrase</p>
+
+      <div class="input-row">
+        <input
+          id="pwInput"
+          type="password"
+          class="pw-input"
+          placeholder="Type the secret here..."
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+        <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" title="Show / hide">
+          👁
+        </button>
+      </div>
+
+      <p class="err" id="errMsg">Hmm, that doesn't seem right. Try again ✨</p>
+
+      <button class="enter-btn" onclick="checkPw()">
+        <span>✦ &nbsp; Enter &nbsp; ✦</span>
+      </button>
+
+    </div>
+  </div>
+
+  <div id="burst"></div>
+  <p class="footer-hint">akshu's birthday surprise &bull; private</p>
+
+  <script>
+    /* ── Starfield ──────────────────────────────────────────── */
+    const canvas = document.getElementById('space');
+    const ctx    = canvas.getContext('2d');
+    let W, H, stars = [], raf;
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function mkStar() {
+      return {
+        x:  Math.random() * W,
+        y:  Math.random() * H,
+        r:  Math.random() * 1.3 + 0.2,
+        a:  Math.random(),
+        da: (Math.random() * 0.007 + 0.001) * (Math.random() < 0.5 ? 1 : -1)
+      };
+    }
+
+    function init() { resize(); stars = Array.from({ length: 220 }, mkStar); }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, W, H);
+      stars.forEach(s => {
+        s.a += s.da;
+        if (s.a >= 1) { s.a = 1; s.da = -Math.abs(s.da); }
+        if (s.a <= 0) { s.a = 0; s.da =  Math.abs(s.da); }
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.a.toFixed(3)})`;
+        ctx.fill();
+      });
+    }
+
+    function loop() { drawStars(); raf = requestAnimationFrame(loop); }
+    window.addEventListener('resize', resize);
+    init(); loop();
+
+    /* ── Auth ───────────────────────────────────────────────── */
+    // btoa("Akshu is best") — light obfuscation only
+    const SECRET = "QWtzaHUgaXMgYmVzdA==";
+
+    function checkPw() {
+      const val = document.getElementById('pwInput').value.trim();
+
+      if (btoa(val) === SECRET) {
+        // ✅ Correct — grant access and redirect
+        sessionStorage.setItem('akshu_auth', 'granted');
+        document.getElementById('card').classList.add('fade-away');
+        document.getElementById('burst').classList.add('bloom');
+        cancelAnimationFrame(raf);
+        setTimeout(() => { window.location.href = 'page1.html'; }, 1100);
+
+      } else {
+        // ❌ Wrong — shake + error
+        const card = document.getElementById('card');
+        card.classList.remove('shake');
+        void card.offsetWidth;                      // force reflow
+        card.classList.add('shake');
+        document.getElementById('errMsg').classList.add('show');
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwInput').focus();
+        setTimeout(() => card.classList.remove('shake'), 500);
+      }
+    }
+
+    document.getElementById('pwInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkPw();
+      document.getElementById('errMsg').classList.remove('show');
+    });
+
+    let eyeOpen = false;
+    function toggleEye() {
+      eyeOpen = !eyeOpen;
+      document.getElementById('pwInput').type    = eyeOpen ? 'text'    : 'password';
+      document.getElementById('eyeBtn').textContent = eyeOpen ? '🙈' : '👁';
+    }
+  </script>
+
+</body>
+</html>
